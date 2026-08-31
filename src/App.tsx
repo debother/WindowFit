@@ -1,58 +1,420 @@
 import { useLayoutEffect, useRef, useState, type Ref } from "react";
 import { PRINT_GEOMETRY, printGeometryCssVariables } from "./geometry";
+import { type Language, translations } from "./i18n";
 import { hasVisualOverflow, recipientHasTooManyExplicitLines } from "./validation";
 
 type PrintMode = "address" | "test";
-type AddressTextProps = { recipient: string; sender: string; recipientRef?: Ref<HTMLDivElement>; senderRef?: Ref<HTMLDivElement> };
+
+type AddressTextProps = {
+  recipient: string;
+  sender: string;
+  placeDate?: string;
+  subject?: string;
+  letterText?: string;
+  recipientRef?: Ref<HTMLDivElement>;
+  senderRef?: Ref<HTMLDivElement>;
+  showWindowGuide?: boolean;
+  showFoldGuide?: boolean;
+  lang: Language;
+};
 
 function AddressText({ recipient, sender, recipientRef, senderRef }: AddressTextProps) {
-  return <div className="address-content" aria-label="Address print content">
-    <div className="additional-zone">{sender && <div className="sender-text" ref={senderRef}>{sender}</div>}</div>
-    <div className="recipient-zone">{recipient && <div className="recipient-text" ref={recipientRef}>{recipient}</div>}</div>
-  </div>;
+  return (
+    <div className="address-content" aria-label="Address print content">
+      <div className="additional-zone">
+        {sender && <div className="sender-text" ref={senderRef}>{sender}</div>}
+      </div>
+      <div className="recipient-zone">
+        {recipient && <div className="recipient-text" ref={recipientRef}>{recipient}</div>}
+      </div>
+    </div>
+  );
 }
 
-function PrintableDocument({ mode, recipient, sender, recipientRef, senderRef }: AddressTextProps & { mode: PrintMode }) {
+function PrintableDocument({
+  mode,
+  recipient,
+  sender,
+  placeDate,
+  subject,
+  letterText,
+  recipientRef,
+  senderRef,
+  showWindowGuide,
+  showFoldGuide,
+  lang,
+}: AddressTextProps & { mode: PrintMode }) {
   const geometry = printGeometryCssVariables();
-  return <section className={`print-document print-document--${mode}`} style={geometry} aria-label={mode === "address" ? "Printable address sheet" : "Printable test page"}>
-    {mode === "address" ? <div className="print-address-field"><AddressText recipient={recipient} sender={sender} recipientRef={recipientRef} senderRef={senderRef} /></div> : <><div className="test-field-guide"><span className="field-guide-label">Address field<br />85 × 45 mm</span></div><div className="test-recipient-guide"><span>Recipient zone<br />85 × 27.3 mm</span></div></>}
-    {mode === "test" && <div className="test-content"><p className="test-title">WindowFit test page</p><p>Print at 100% / Actual size. Disable browser headers and footers if they affect your print.</p><p>Fold only after checking the address field against your envelope. No exact fold line is shown because it is not defined by this layout fixture.</p><div className="calibration" aria-label="100 millimetre calibration reference"><span className="calibration-line" /><span>100 mm</span></div><p className="calibration-copy">This line should measure exactly 100 mm after printing.</p><p>Use this page to verify your browser, printer and envelope before printing an address.</p></div>}
-  </section>;
+  const t = translations[lang];
+
+  return (
+    <section
+      className={`print-document print-document--${mode}`}
+      style={geometry}
+      aria-label={mode === "address" ? "Printable address sheet" : "Printable test page"}
+    >
+      {mode === "address" ? (
+        <>
+          <div className="print-address-field">
+            <AddressText
+              recipient={recipient}
+              sender={sender}
+              recipientRef={recipientRef}
+              senderRef={senderRef}
+              lang={lang}
+            />
+          </div>
+
+          {(placeDate || subject || letterText) && (
+            <div className="letter-body-flow">
+              {placeDate && <div className="letter-place-date">{placeDate}</div>}
+              {subject && <div className="letter-subject">{subject}</div>}
+              {letterText && <div className="letter-text">{letterText}</div>}
+            </div>
+          )}
+
+          {showWindowGuide && (
+            <div className="screen-guide-window no-print" aria-hidden="true">
+              <span className="screen-guide-label">{t.windowGuideLabel}</span>
+            </div>
+          )}
+
+          {showFoldGuide && (
+            <div className="screen-guide-folds no-print" aria-hidden="true">
+              <div className="screen-fold-line screen-fold-line--top">
+                <span>{t.foldGuideTopLabel}</span>
+              </div>
+              <div className="screen-fold-line screen-fold-line--bottom">
+                <span>{t.foldGuideBottomLabel}</span>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="test-field-guide">
+            <span className="field-guide-label">{t.testFieldGuideLabel}</span>
+          </div>
+          <div className="test-recipient-guide">
+            <span>{t.testRecipientGuideLabel}</span>
+          </div>
+          <div className="test-content">
+            <p className="test-title">{t.testTitle}</p>
+            <p>{t.testP1}</p>
+            <p>{t.testP2}</p>
+            <div className="calibration" aria-label="100 millimetre calibration reference">
+              <span className="calibration-line" />
+              <span>{t.testCalibration}</span>
+            </div>
+            <p className="calibration-copy">{t.testCalibrationCopy}</p>
+            <p>{t.testP3}</p>
+          </div>
+        </>
+      )}
+    </section>
+  );
 }
 
 export default function App() {
+  const [lang, setLang] = useState<Language>("de");
   const [recipient, setRecipient] = useState("");
   const [sender, setSender] = useState("");
+  const [showLetter, setShowLetter] = useState(false);
+  const [placeDate, setPlaceDate] = useState("");
+  const [subject, setSubject] = useState("");
+  const [letterText, setLetterText] = useState("");
+  const [showWindowGuide, setShowWindowGuide] = useState(false);
+  const [showFoldGuide, setShowFoldGuide] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>("address");
+
   const recipientRef = useRef<HTMLDivElement>(null);
   const senderRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
   const [recipientOverflows, setRecipientOverflows] = useState(false);
   const [senderOverflows, setSenderOverflows] = useState(false);
-  const hasTooManyRecipientLines = recipientHasTooManyExplicitLines(recipient, PRINT_GEOMETRY.recipientZone.maxLines);
-  const cannotPrint = recipient === "" || hasTooManyRecipientLines || recipientOverflows || senderOverflows;
-  const printLimitMessage = recipient === "" ? "Enter a recipient address before printing." : hasTooManyRecipientLines ? "This layout supports up to 6 recipient lines. Reduce the entered line breaks before printing." : recipientOverflows ? "A recipient line is too long for the supported address field. Shorten that line before printing." : senderOverflows ? "The additional line is too long for its supported zone. Shorten it before printing." : null;
+  const [previewPageCount, setPreviewPageCount] = useState(1);
+
+  const t = translations[lang];
+  const isRecipientEmpty = recipient.trim() === "";
+  const hasTooManyRecipientLines = recipientHasTooManyExplicitLines(
+    recipient,
+    PRINT_GEOMETRY.recipientZone.maxLines
+  );
+  const isPrintDisabled = isRecipientEmpty || hasTooManyRecipientLines;
+
+  const printLimitMessage =
+    isRecipientEmpty
+      ? t.validationEnterRecipient
+      : hasTooManyRecipientLines
+      ? t.validationMaxLines
+      : recipientOverflows
+      ? t.validationRecipientOverflow
+      : senderOverflows
+      ? t.validationSenderOverflow
+      : null;
 
   useLayoutEffect(() => {
     const recipientNode = recipientRef.current;
     const senderNode = senderRef.current;
     setRecipientOverflows(Boolean(recipientNode && hasVisualOverflow(recipientNode)));
     setSenderOverflows(Boolean(senderNode && hasVisualOverflow(senderNode)));
-  }, [recipient, sender]);
 
-  function openPrint(mode: PrintMode) { setPrintMode(mode); requestAnimationFrame(() => window.print()); }
+    const measureNode = measureRef.current;
+    if (measureNode && showLetter) {
+      const pageHeightPx = (PRINT_GEOMETRY.paper.heightMm * 96) / 25.4;
+      const scrollH = measureNode.scrollHeight;
+      const pages = Math.max(1, Math.ceil((scrollH - 2) / pageHeightPx));
+      setPreviewPageCount(pages);
+    } else {
+      setPreviewPageCount(1);
+    }
+  }, [recipient, sender, placeDate, subject, letterText, showLetter, lang]);
 
-  return <div className="app-shell">
-    <header className="app-header no-print"><span className="brand">WindowFit</span><span className="format-label">A4 · German window-letter layout</span></header>
-    <main id="main" className="workbench">
-      <section className="controls no-print" aria-labelledby="windowfit-title">
-        <p className="eyebrow">Address → Preview → Print → Fold</p><h1 id="windowfit-title">Put the address where the window is.</h1><p className="intro">For one supported A4 German window-letter layout. Designed for printing at 100% / Actual size.</p>
-        <label htmlFor="recipient">Recipient address</label><textarea id="recipient" value={recipient} onChange={(event) => setRecipient(event.target.value)} rows={6} placeholder={"Ada Example\nExample Street 1\n12345 Exampletown"} aria-describedby={cannotPrint ? "print-limit" : undefined} />
-        {printLimitMessage && <p id="print-limit" className="line-limit" role="status">{printLimitMessage}</p>}
-        <label htmlFor="sender">Sender or additional line <span>(optional)</span></label><input id="sender" value={sender} onChange={(event) => setSender(event.target.value)} placeholder="Your name · return address" />
-        <div className="actions"><button className="primary-action" type="button" onClick={() => openPrint("address")} disabled={cannotPrint}>Print / PDF</button><button className="secondary-action" type="button" onClick={() => openPrint("test")}>Test page</button></div><p className="trust-note">Your address stays in your browser. Use the test page to verify your printer and envelope.</p>
-      </section>
-      <section className="preview-panel no-print" aria-labelledby="preview-heading"><div className="preview-heading"><h2 id="preview-heading">Live A4 preview</h2><span>Screen preview only</span></div><div className="preview-scale"><PrintableDocument mode="address" recipient={recipient} sender={sender} recipientRef={recipientRef} senderRef={senderRef} /></div><p className="preview-note">The print layout uses millimetres. This preview is scaled only to fit your screen.</p></section>
-    </main>
-    <div className="print-only"><PrintableDocument mode={printMode} recipient={recipient} sender={sender} /></div>
-  </div>;
+  function openPrint(mode: PrintMode) {
+    if (mode === "address") {
+      if (isRecipientEmpty || hasTooManyRecipientLines) {
+        return;
+      }
+      const recipientNode = recipientRef.current;
+      const senderNode = senderRef.current;
+      if (
+        (recipientNode && hasVisualOverflow(recipientNode)) ||
+        (senderNode && hasVisualOverflow(senderNode))
+      ) {
+        return;
+      }
+    }
+    setPrintMode(mode);
+    requestAnimationFrame(() => window.print());
+  }
+
+  const geometryVars = printGeometryCssVariables();
+
+  return (
+    <div className="app-shell" style={geometryVars}>
+      <header className="app-header no-print">
+        <div className="brand-group">
+          <span className="brand">{t.brand}</span>
+          <span className="format-label">{t.formatLabel}</span>
+        </div>
+        <nav className="lang-switch" aria-label="Language / Sprache">
+          <button
+            type="button"
+            className={`lang-btn ${lang === "de" ? "lang-btn--active" : ""}`}
+            onClick={() => setLang("de")}
+            aria-pressed={lang === "de"}
+            lang="de"
+          >
+            DE
+          </button>
+          <span className="lang-sep" aria-hidden="true">·</span>
+          <button
+            type="button"
+            className={`lang-btn ${lang === "en" ? "lang-btn--active" : ""}`}
+            onClick={() => setLang("en")}
+            aria-pressed={lang === "en"}
+            lang="en"
+          >
+            EN
+          </button>
+        </nav>
+      </header>
+
+      <main id="main" className="workbench">
+        <section className="controls no-print" aria-labelledby="windowfit-title">
+          <p className="eyebrow">{t.eyebrow}</p>
+          <h1 id="windowfit-title">{t.title}</h1>
+          <p className="intro">{t.intro}</p>
+
+          <label htmlFor="recipient">{t.recipientLabel}</label>
+          <textarea
+            id="recipient"
+            value={recipient}
+            onChange={(event) => setRecipient(event.target.value)}
+            rows={6}
+            placeholder={t.recipientPlaceholder}
+            aria-describedby={printLimitMessage ? "print-limit" : undefined}
+          />
+          {printLimitMessage && (
+            <p id="print-limit" className="line-limit" role="status">
+              {printLimitMessage}
+            </p>
+          )}
+
+          <label htmlFor="sender">
+            {t.senderLabel} <span>{t.senderOptional}</span>
+          </label>
+          <input
+            id="sender"
+            value={sender}
+            onChange={(event) => setSender(event.target.value)}
+            placeholder={t.senderPlaceholder}
+          />
+
+          <div className="guide-toggles">
+            <label className="toggle-checkbox">
+              <input
+                type="checkbox"
+                checked={showWindowGuide}
+                onChange={(e) => setShowWindowGuide(e.target.checked)}
+              />
+              <span>{t.showWindowGuide}</span>
+            </label>
+            <label className="toggle-checkbox">
+              <input
+                type="checkbox"
+                checked={showFoldGuide}
+                onChange={(e) => setShowFoldGuide(e.target.checked)}
+              />
+              <span>{t.showFoldGuide}</span>
+            </label>
+          </div>
+
+          <div className="letter-toggle-section">
+            <button
+              type="button"
+              className="btn-text-toggle"
+              onClick={() => setShowLetter(!showLetter)}
+            >
+              {showLetter ? t.removeLetterAction : t.addLetterAction}
+            </button>
+          </div>
+
+          {showLetter && (
+            <div className="letter-fields">
+              <label htmlFor="place-date">
+                {t.placeDateLabel} <span>{t.placeDateOptional}</span>
+              </label>
+              <input
+                id="place-date"
+                value={placeDate}
+                onChange={(e) => setPlaceDate(e.target.value)}
+                placeholder={t.placeDatePlaceholder}
+              />
+
+              <label htmlFor="subject">
+                {t.subjectLabel} <span>{t.subjectOptional}</span>
+              </label>
+              <input
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder={t.subjectPlaceholder}
+              />
+
+              <label htmlFor="letter-text">{t.letterTextLabel}</label>
+              <textarea
+                id="letter-text"
+                value={letterText}
+                onChange={(e) => setLetterText(e.target.value)}
+                rows={8}
+                placeholder={t.letterTextPlaceholder}
+              />
+            </div>
+          )}
+
+          <div className="actions">
+            <button
+              className="primary-action"
+              type="button"
+              onClick={() => openPrint("address")}
+              disabled={isPrintDisabled}
+            >
+              {t.printAction}
+            </button>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={() => openPrint("test")}
+            >
+              {t.testPageAction}
+            </button>
+          </div>
+
+          {showFoldGuide && (
+            <div className="fold-guide-card" aria-label={t.foldGuideHeading}>
+              <p className="fold-guide-title">{t.foldGuideHeading}</p>
+              <ol className="fold-guide-steps">
+                <li>{t.foldStep1}</li>
+                <li>{t.foldStep2}</li>
+                <li>{t.foldStep3}</li>
+              </ol>
+            </div>
+          )}
+
+          <p className="trust-note">{t.trustNote}</p>
+        </section>
+
+        <section className="preview-panel no-print" aria-labelledby="preview-heading">
+          <div className="preview-heading">
+            <h2 id="preview-heading">{t.previewHeading}</h2>
+            <span>{t.previewScreenOnly}</span>
+          </div>
+          <div className="preview-scale">
+            <div className="preview-sheets">
+              {Array.from({ length: previewPageCount }, (_, pageIndex) => (
+                <div key={pageIndex} className="preview-sheet-wrapper">
+                  {previewPageCount > 1 && (
+                    <div className="preview-sheet-header" aria-hidden="true">
+                      <span>
+                        {lang === "de" ? `Seite ${pageIndex + 1}` : `Page ${pageIndex + 1}`}
+                      </span>
+                    </div>
+                  )}
+                  <div className="preview-sheet-viewport">
+                    <div
+                      className="preview-sheet-content"
+                      style={{
+                        transform: `translateY(calc(-${pageIndex * 297}mm))`,
+                      }}
+                    >
+                      <PrintableDocument
+                        mode="address"
+                        recipient={recipient}
+                        sender={sender}
+                        placeDate={showLetter ? placeDate : undefined}
+                        subject={showLetter ? subject : undefined}
+                        letterText={showLetter ? letterText : undefined}
+                        showWindowGuide={pageIndex === 0 && showWindowGuide}
+                        showFoldGuide={pageIndex === 0 && showFoldGuide}
+                        lang={lang}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="preview-note">{t.previewNote}</p>
+        </section>
+      </main>
+
+      {/* Hidden offscreen unconstrained container for accurate layout measurement */}
+      <div className="print-measure no-print" aria-hidden="true" ref={measureRef}>
+        <PrintableDocument
+          mode="address"
+          recipient={recipient}
+          sender={sender}
+          placeDate={showLetter ? placeDate : undefined}
+          subject={showLetter ? subject : undefined}
+          letterText={showLetter ? letterText : undefined}
+          recipientRef={recipientRef}
+          senderRef={senderRef}
+          lang={lang}
+        />
+      </div>
+
+      <div className="print-only">
+        <PrintableDocument
+          mode={printMode}
+          recipient={recipient}
+          sender={sender}
+          placeDate={showLetter ? placeDate : undefined}
+          subject={showLetter ? subject : undefined}
+          letterText={showLetter ? letterText : undefined}
+          lang={lang}
+        />
+      </div>
+    </div>
+  );
 }

@@ -6,7 +6,10 @@ export type OverflowDimensions = Readonly<{
 }>;
 
 export function hasVisualOverflow(dimensions: OverflowDimensions): boolean {
-  return dimensions.scrollWidth > dimensions.clientWidth || dimensions.scrollHeight > dimensions.clientHeight;
+  return (
+    dimensions.scrollWidth - dimensions.clientWidth > 0.5 ||
+    dimensions.scrollHeight - dimensions.clientHeight > 0.5
+  );
 }
 
 export function recipientHasTooManyExplicitLines(recipient: string, maxLines: number): boolean {
