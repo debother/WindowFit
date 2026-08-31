@@ -129,8 +129,10 @@ export default function App() {
 
   const recipientRef = useRef<HTMLDivElement>(null);
   const senderRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
   const [recipientOverflows, setRecipientOverflows] = useState(false);
   const [senderOverflows, setSenderOverflows] = useState(false);
+  const [previewPageCount, setPreviewPageCount] = useState(1);
 
   const t = translations[lang];
 
@@ -157,7 +159,17 @@ export default function App() {
     const senderNode = senderRef.current;
     setRecipientOverflows(Boolean(recipientNode && hasVisualOverflow(recipientNode)));
     setSenderOverflows(Boolean(senderNode && hasVisualOverflow(senderNode)));
-  }, [recipient, sender]);
+
+    const measureNode = measureRef.current;
+    if (measureNode) {
+      const pageHeightPx = (PRINT_GEOMETRY.paper.heightMm * 96) / 25.4;
+      const scrollH = measureNode.scrollHeight;
+      const pages = Math.max(1, Math.ceil((scrollH - 2) / pageHeightPx));
+      setPreviewPageCount(pages);
+    } else {
+      setPreviewPageCount(1);
+    }
+  }, [recipient, sender, placeDate, subject, letterText, showLetter, lang]);
 
   function openPrint(mode: PrintMode) {
     setPrintMode(mode);
@@ -325,23 +337,58 @@ export default function App() {
             <span>{t.previewScreenOnly}</span>
           </div>
           <div className="preview-scale">
-            <PrintableDocument
-              mode="address"
-              recipient={recipient}
-              sender={sender}
-              placeDate={showLetter ? placeDate : undefined}
-              subject={showLetter ? subject : undefined}
-              letterText={showLetter ? letterText : undefined}
-              recipientRef={recipientRef}
-              senderRef={senderRef}
-              showWindowGuide={showWindowGuide}
-              showFoldGuide={showFoldGuide}
-              lang={lang}
-            />
+            <div className="preview-sheets">
+              {Array.from({ length: previewPageCount }, (_, pageIndex) => (
+                <div key={pageIndex} className="preview-sheet-wrapper">
+                  {previewPageCount > 1 && (
+                    <div className="preview-sheet-header" aria-hidden="true">
+                      <span>
+                        {lang === "de" ? `Seite ${pageIndex + 1}` : `Page ${pageIndex + 1}`}
+                      </span>
+                    </div>
+                  )}
+                  <div className="preview-sheet-viewport">
+                    <div
+                      className="preview-sheet-content"
+                      style={{
+                        transform: `translateY(calc(-${pageIndex * 297}mm))`,
+                      }}
+                    >
+                      <PrintableDocument
+                        mode="address"
+                        recipient={recipient}
+                        sender={sender}
+                        placeDate={showLetter ? placeDate : undefined}
+                        subject={showLetter ? subject : undefined}
+                        letterText={showLetter ? letterText : undefined}
+                        recipientRef={pageIndex === 0 ? recipientRef : undefined}
+                        senderRef={pageIndex === 0 ? senderRef : undefined}
+                        showWindowGuide={pageIndex === 0 && showWindowGuide}
+                        showFoldGuide={pageIndex === 0 && showFoldGuide}
+                        lang={lang}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <p className="preview-note">{t.previewNote}</p>
         </section>
       </main>
+
+      {/* Hidden offscreen unconstrained container for accurate layout measurement */}
+      <div className="print-measure no-print" aria-hidden="true" ref={measureRef}>
+        <PrintableDocument
+          mode="address"
+          recipient={recipient}
+          sender={sender}
+          placeDate={showLetter ? placeDate : undefined}
+          subject={showLetter ? subject : undefined}
+          letterText={showLetter ? letterText : undefined}
+          lang={lang}
+        />
+      </div>
 
       <div className="print-only">
         <PrintableDocument

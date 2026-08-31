@@ -53,4 +53,12 @@ describe("WindowFit print CSS contracts", () => {
     expect(css).toContain(".print-document { width:210mm; min-height:297mm; display:block; page-break-after:auto; }");
     expect(css).toContain(".print-document--test { width:210mm; height:297mm; overflow:hidden; page-break-after:avoid; }");
   });
+
+  it("maintains screen preview multi-sheet structure and hidden measurement layer", () => {
+    expect(css).toContain(".preview-sheets");
+    expect(css).toContain(".preview-sheet-wrapper");
+    expect(css).toContain(".preview-sheet-viewport");
+    expect(css).toContain(".preview-sheet-content");
+    expect(css).toContain(".print-measure { position:absolute; visibility:hidden;");
+  });
 });

@@ -243,4 +243,25 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     expect(printOnly.querySelector(".lang-switch")).not.toBeInTheDocument();
     expect(printOnly.querySelector(".guide-toggles")).not.toBeInTheDocument();
   });
+
+  it("19. Live preview renders separate sheet viewports with deterministic pagination wrappers", () => {
+    render(<App />);
+    const previewScale = document.querySelector(".preview-scale");
+    expect(previewScale).toBeInTheDocument();
+    const sheets = document.querySelectorAll(".preview-sheet-wrapper");
+    expect(sheets.length).toBeGreaterThanOrEqual(1);
+
+    const firstViewport = sheets[0].querySelector(".preview-sheet-viewport");
+    expect(firstViewport).toBeInTheDocument();
+    const firstContent = sheets[0].querySelector(".preview-sheet-content");
+    expect(firstContent).toBeInTheDocument();
+  });
+
+  it("20. Offscreen print measurement container is marked no-print", () => {
+    render(<App />);
+    const measureNode = document.querySelector(".print-measure");
+    expect(measureNode).toBeInTheDocument();
+    expect(measureNode).toHaveClass("no-print");
+    expect(measureNode).toHaveAttribute("aria-hidden", "true");
+  });
 });
