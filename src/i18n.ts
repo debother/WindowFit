@@ -16,7 +16,7 @@ export const translations = {
     removeLetterAction: "− Brieftext ausblenden",
     placeDateLabel: "Ort und Datum",
     placeDateOptional: "(optional)",
-    placeDatePlaceholder: "z. B. Dieburg, 31.08.2026",
+    placeDatePlaceholder: "z. B. Frankfurt am Main, 31.08.2026",
     subjectLabel: "Betreff",
     subjectOptional: "(optional)",
     subjectPlaceholder: "z. B. Kündigung Vertrag 12345",
