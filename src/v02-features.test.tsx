@@ -98,6 +98,7 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
 
   it("7. Optional letter mode is hidden by default", () => {
     render(<App />);
+    expect(screen.queryByLabelText(/ort und datum/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/betreff/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/brieftext/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "+ Brieftext hinzufügen" })).toBeInTheDocument();
@@ -108,24 +109,44 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     const toggleBtn = screen.getByRole("button", { name: "+ Brieftext hinzufügen" });
     fireEvent.click(toggleBtn);
 
+    expect(screen.getByLabelText(/ort und datum/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/betreff/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/brieftext/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "− Brieftext ausblenden" })).toBeInTheDocument();
   });
 
-  it("9. Letter content appears in print document", () => {
+  it("9. Letter content appears in print document with right-aligned place/date", () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Empfänger Name\nStraße 1\n12345 Ort" } });
     fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
 
+    fireEvent.change(screen.getByLabelText(/ort und datum/i), { target: { value: "Dieburg, 31.08.2026" } });
     fireEvent.change(screen.getByLabelText(/betreff/i), { target: { value: "Wichtige Mitteilung" } });
     fireEvent.change(screen.getByLabelText(/brieftext/i), {
       target: { value: "Sehr geehrte Damen und Herren,\n\ndies ist der Inhalt." },
     });
 
     const printDoc = document.querySelector(".print-only .print-document--address")!;
+    expect(printDoc.querySelector(".letter-place-date")?.textContent).toBe("Dieburg, 31.08.2026");
     expect(printDoc.querySelector(".letter-subject")?.textContent).toBe("Wichtige Mitteilung");
     expect(printDoc.querySelector(".letter-text")?.textContent).toContain("dies ist der Inhalt.");
+  });
+
+  it("9b. Place and date value survives DE/EN UI switching without loss", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
+    const placeDateInput = screen.getByLabelText(/ort und datum/i);
+    fireEvent.change(placeDateInput, { target: { value: "München, 01.09.2026" } });
+
+    // Switch to English
+    fireEvent.click(screen.getByRole("button", { name: "EN" }));
+    const enInput = screen.getByLabelText(/place and date/i) as HTMLInputElement;
+    expect(enInput.value).toBe("München, 01.09.2026");
+
+    // Switch back to German
+    fireEvent.click(screen.getByRole("button", { name: "DE" }));
+    const deInput = screen.getByLabelText(/ort und datum/i) as HTMLInputElement;
+    expect(deInput.value).toBe("München, 01.09.2026");
   });
 
   it("10. Letter content starts safely below protected address region (>= 90 mm from top)", () => {
@@ -168,14 +189,17 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     expect(testDoc).toHaveTextContent("100 mm");
   });
 
-  it("14. No address or letter content persistence in localStorage or sessionStorage", () => {
+  it("14. No address, place/date, or letter content persistence in localStorage or sessionStorage", () => {
     render(<App />);
-    fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Private Address" } });
+    fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Secret Address" } });
     fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
-    fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: "Private Letter" } });
+    fireEvent.change(screen.getByLabelText(/ort und datum/i), { target: { value: "Dieburg, 31.08.2026" } });
+    fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: "Secret Body Text" } });
 
     expect(window.localStorage.getItem("recipient")).toBeNull();
+    expect(window.localStorage.getItem("placeDate")).toBeNull();
     expect(window.localStorage.getItem("letterText")).toBeNull();
+    expect(window.localStorage.length).toBe(0);
     expect(window.sessionStorage.length).toBe(0);
   });
 
@@ -188,6 +212,7 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Firma A\nStr. 1\n12345 Stadt" } });
     fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
+    fireEvent.change(screen.getByLabelText(/ort und datum/i), { target: { value: "Berlin, 01.09.2026" } });
     fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: "Kurzer Text auf einer Seite." } });
 
     const printDoc = document.querySelector(".print-only .print-document--address")!;

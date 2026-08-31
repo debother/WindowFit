@@ -8,6 +8,7 @@ type PrintMode = "address" | "test";
 type AddressTextProps = {
   recipient: string;
   sender: string;
+  placeDate?: string;
   subject?: string;
   letterText?: string;
   recipientRef?: Ref<HTMLDivElement>;
@@ -34,6 +35,7 @@ function PrintableDocument({
   mode,
   recipient,
   sender,
+  placeDate,
   subject,
   letterText,
   recipientRef,
@@ -63,8 +65,9 @@ function PrintableDocument({
             />
           </div>
 
-          {(subject || letterText) && (
+          {(placeDate || subject || letterText) && (
             <div className="letter-body-flow">
+              {placeDate && <div className="letter-place-date">{placeDate}</div>}
               {subject && <div className="letter-subject">{subject}</div>}
               {letterText && <div className="letter-text">{letterText}</div>}
             </div>
@@ -117,6 +120,7 @@ export default function App() {
   const [recipient, setRecipient] = useState("");
   const [sender, setSender] = useState("");
   const [showLetter, setShowLetter] = useState(false);
+  const [placeDate, setPlaceDate] = useState("");
   const [subject, setSubject] = useState("");
   const [letterText, setLetterText] = useState("");
   const [showWindowGuide, setShowWindowGuide] = useState(false);
@@ -252,6 +256,16 @@ export default function App() {
 
           {showLetter && (
             <div className="letter-fields">
+              <label htmlFor="place-date">
+                {t.placeDateLabel} <span>{t.placeDateOptional}</span>
+              </label>
+              <input
+                id="place-date"
+                value={placeDate}
+                onChange={(e) => setPlaceDate(e.target.value)}
+                placeholder={t.placeDatePlaceholder}
+              />
+
               <label htmlFor="subject">
                 {t.subjectLabel} <span>{t.subjectOptional}</span>
               </label>
@@ -315,6 +329,7 @@ export default function App() {
               mode="address"
               recipient={recipient}
               sender={sender}
+              placeDate={showLetter ? placeDate : undefined}
               subject={showLetter ? subject : undefined}
               letterText={showLetter ? letterText : undefined}
               recipientRef={recipientRef}
@@ -333,6 +348,7 @@ export default function App() {
           mode={printMode}
           recipient={recipient}
           sender={sender}
+          placeDate={showLetter ? placeDate : undefined}
           subject={showLetter ? subject : undefined}
           letterText={showLetter ? letterText : undefined}
           lang={lang}
