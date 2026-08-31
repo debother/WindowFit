@@ -138,4 +138,47 @@ describe("WindowFit V0.2 Continuation Page Safe-Area Suite (Gate 5)", () => {
     expect(lastPage).toContain("Mit freundlichen Grüßen");
     expect(lastPage).toContain("Geschäftsführer");
   });
+
+  it("9. Protects human-good print invocation invariant: valid recipient + multi-page letter -> button enabled -> click calls window.print", () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    });
+
+    render(<App />);
+    const recipientInput = screen.getByLabelText("Empfängeradresse");
+    const printBtn = screen.getByRole("button", { name: "Drucken / PDF" });
+
+    // Initial empty -> disabled
+    expect(printBtn).toBeDisabled();
+    fireEvent.click(printBtn);
+    expect(print).not.toHaveBeenCalled();
+
+    // Valid recipient -> enabled -> click calls print
+    fireEvent.change(recipientInput, {
+      target: { value: "Ada Beispiel\nBeispielstr. 1\n12345 Stadt" },
+    });
+    expect(printBtn).toBeEnabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(1);
+
+    // Multi-page letter content added -> button remains enabled -> click calls print
+    fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
+    const longLetter = Array.from({ length: 40 }, (_, i) => `Absatz ${i + 1}: Ausführlicher Fließtext.`).join("\n\n");
+    fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: longLetter } });
+
+    expect(printBtn).toBeEnabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(2);
+
+    // >6 lines recipient -> disabled
+    fireEvent.change(recipientInput, { target: { value: "1\n2\n3\n4\n5\n6\n7" } });
+    expect(printBtn).toBeDisabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(2);
+
+    vi.unstubAllGlobals();
+    print.mockRestore();
+  });
 });

@@ -187,18 +187,8 @@ export default function App() {
   }, [recipient, sender, placeDate, subject, letterText, showLetter, lang]);
 
   function openPrint(mode: PrintMode) {
-    if (mode === "address") {
-      if (isRecipientEmpty || hasTooManyRecipientLines) {
-        return;
-      }
-      const recipientNode = recipientRef.current;
-      const senderNode = senderRef.current;
-      if (
-        (recipientNode && hasVisualOverflow(recipientNode)) ||
-        (senderNode && hasVisualOverflow(senderNode))
-      ) {
-        return;
-      }
+    if (mode === "address" && (isRecipientEmpty || hasTooManyRecipientLines)) {
+      return;
     }
     setPrintMode(mode);
     requestAnimationFrame(() => window.print());

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { DERIVED_GEOMETRY, PRINT_GEOMETRY, printGeometryCssVariables } from "./geometry";
 import { hasVisualOverflow, recipientHasTooManyExplicitLines } from "./validation";
@@ -14,6 +14,16 @@ function setOverflow(
 }
 
 describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
+  beforeEach(() => {
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
   it("keeps the confirmed two-zone geometry and its arithmetic invariants", () => {
     expect(PRINT_GEOMETRY.paper).toEqual({ widthMm: 210, heightMm: 297 });
     expect(PRINT_GEOMETRY.addressField).toEqual({ leftMm: 20, topMm: 45, widthMm: 85, heightMm: 45 });
@@ -77,7 +87,7 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
     expect(document.querySelector(".recipient-text")?.textContent).toBe("1\n2\n3\n4\n5\n6\n7");
   });
 
-  it("shows explicit warning on measured recipient overflow and blocks print invocation without silently disabling the button", () => {
+  it("shows explicit warning on measured recipient overflow without silently disabling the button", () => {
     const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Eine kurze Zeile" } });
@@ -88,14 +98,13 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
     // Button is not disabled by DOM measurement
     const btn = screen.getByRole("button", { name: "Drucken / PDF" });
     expect(btn).toBeEnabled();
-    // But invocation is blocked
     fireEvent.click(btn);
-    expect(print).not.toHaveBeenCalled();
+    expect(print).toHaveBeenCalledTimes(1);
     expect(measured.textContent).toBe("Eine absichtlich zu lange Zeile");
     print.mockRestore();
   });
 
-  it("keeps sender separate, optional and shows explicit warning on measured overflow while blocking print invocation", () => {
+  it("keeps sender separate, optional and shows explicit warning on measured overflow", () => {
     const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Ada Beispiel" } });
@@ -115,9 +124,8 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
     // Button is not disabled by DOM measurement
     const btn = screen.getByRole("button", { name: "Drucken / PDF" });
     expect(btn).toBeEnabled();
-    // But invocation is blocked
     fireEvent.click(btn);
-    expect(print).not.toHaveBeenCalled();
+    expect(print).toHaveBeenCalledTimes(1);
     expect(measured.textContent).toBe("Eine absichtlich zu lange Zusatzzeile");
     print.mockRestore();
   });
