@@ -264,4 +264,85 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     expect(measureNode).toHaveClass("no-print");
     expect(measureNode).toHaveAttribute("aria-hidden", "true");
   });
+
+  it("21. Preview synchronizes immediately when letter text is deleted (cleared)", () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Mustermann GmbH\nAm Park 1\n10115 Berlin" } });
+    fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
+
+    const letterInput = screen.getByLabelText(/brieftext/i);
+    fireEvent.change(letterInput, { target: { value: "STALE-CONTENT-MUST-DISAPPEAR\n\nZweite Zeile" } });
+
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("STALE-CONTENT-MUST-DISAPPEAR");
+    expect(document.querySelector(".print-only")?.textContent).toContain("STALE-CONTENT-MUST-DISAPPEAR");
+
+    // Clear letter text
+    fireEvent.change(letterInput, { target: { value: "" } });
+
+    expect(document.querySelector(".preview-scale")?.textContent).not.toContain("STALE-CONTENT-MUST-DISAPPEAR");
+    expect(document.querySelector(".print-only")?.textContent).not.toContain("STALE-CONTENT-MUST-DISAPPEAR");
+  });
+
+  it("22. Preview synchronizes immediately when long body is replaced by short text", () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Mustermann GmbH\nAm Park 1\n10115 Berlin" } });
+    fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
+
+    const letterInput = screen.getByLabelText(/brieftext/i);
+    fireEvent.change(letterInput, { target: { value: "OLD-LONG-TEXT-PARAGRAPH" } });
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("OLD-LONG-TEXT-PARAGRAPH");
+
+    fireEvent.change(letterInput, { target: { value: "CURRENT-CONTENT-SHORT" } });
+    expect(document.querySelector(".preview-scale")?.textContent).not.toContain("OLD-LONG-TEXT-PARAGRAPH");
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("CURRENT-CONTENT-SHORT");
+  });
+
+  it("23. Recipient empty disables print button and removes recipient from preview; restoring recipient re-enables print", () => {
+    render(<App />);
+    const recipientInput = screen.getByLabelText("Empfängeradresse");
+    const printBtn = screen.getByRole("button", { name: "Drucken / PDF" });
+
+    // Initial state: empty recipient -> Print disabled
+    expect(printBtn).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent(/empfängeradresse/i);
+
+    // Enter recipient -> Print enabled
+    fireEvent.change(recipientInput, { target: { value: "Mustermann GmbH\n10115 Berlin" } });
+    expect(printBtn).toBeEnabled();
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("Mustermann GmbH");
+
+    // Clear recipient -> Print disabled, preview updated
+    fireEvent.change(recipientInput, { target: { value: "" } });
+    expect(printBtn).toBeDisabled();
+    expect(document.querySelector(".preview-scale")?.textContent).not.toContain("Mustermann GmbH");
+
+    // Restore recipient -> Print enabled
+    fireEvent.change(recipientInput, { target: { value: "Mustermann GmbH\n10115 Berlin" } });
+    expect(printBtn).toBeEnabled();
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("Mustermann GmbH");
+  });
+
+  it("24. Toggling letter composition on/off clears/restores letter fields from preview and print DOM", () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Mustermann GmbH\n10115 Berlin" } });
+    const toggleBtn = screen.getByRole("button", { name: "+ Brieftext hinzufügen" });
+    fireEvent.click(toggleBtn);
+
+    fireEvent.change(screen.getByLabelText(/ort und datum/i), { target: { value: "Frankfurt am Main, 31.08.2026" } });
+    fireEvent.change(screen.getByLabelText(/betreff/i), { target: { value: "Test Betreff" } });
+    fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: "Test Inhalt" } });
+
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("Test Betreff");
+    expect(document.querySelector(".print-only")?.textContent).toContain("Test Betreff");
+
+    // Toggle off letter
+    fireEvent.click(screen.getByRole("button", { name: "− Brieftext ausblenden" }));
+    expect(document.querySelector(".preview-scale")?.textContent).not.toContain("Test Betreff");
+    expect(document.querySelector(".print-only")?.textContent).not.toContain("Test Betreff");
+
+    // Toggle back on
+    fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
+    expect(document.querySelector(".preview-scale")?.textContent).toContain("Test Betreff");
+    expect(document.querySelector(".print-only")?.textContent).toContain("Test Betreff");
+  });
 });
