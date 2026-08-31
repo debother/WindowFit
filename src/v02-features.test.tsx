@@ -227,12 +227,11 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     const longText = Array.from({ length: 50 }, (_, i) => `Absatz ${i + 1}: Dies ist ein langer Fließtext für Mehrseiten-Briefe.`).join("\n\n");
     fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: longText } });
 
-    const printOnly = document.querySelector(".print-only")!;
-    const pages = document.querySelectorAll(".print-only .print-page");
-    expect(pages.length).toBeGreaterThan(1);
-    expect(printOnly.textContent).toContain("Absatz 1:");
-    expect(printOnly.textContent).toContain("Absatz 25:");
-    expect(printOnly.textContent).toContain("Absatz 50:");
+    const printDoc = document.querySelector(".print-only .print-document--address")!;
+    const content = printDoc.querySelector(".letter-text")?.textContent;
+    expect(content).toContain("Absatz 1:");
+    expect(content).toContain("Absatz 25:");
+    expect(content).toContain("Absatz 50:");
   });
 
   it("18. No UI controls in print output", () => {

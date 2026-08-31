@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, useState, type Ref } from "react";
 import { PRINT_GEOMETRY, printGeometryCssVariables } from "./geometry";
 import { type Language, translations } from "./i18n";
-import { paginateLetterContent } from "./pagination";
 import { hasVisualOverflow, recipientHasTooManyExplicitLines } from "./validation";
 
 type PrintMode = "address" | "test";
@@ -11,7 +10,7 @@ type AddressTextProps = {
   sender: string;
   placeDate?: string;
   subject?: string;
-  letterPageText?: string;
+  letterText?: string;
   recipientRef?: Ref<HTMLDivElement>;
   senderRef?: Ref<HTMLDivElement>;
   showWindowGuide?: boolean;
@@ -34,81 +33,63 @@ function AddressText({ recipient, sender, recipientRef, senderRef }: AddressText
 
 function PrintableDocument({
   mode,
-  pageIndex = 0,
-  letterPageText,
   recipient,
   sender,
   placeDate,
   subject,
+  letterText,
   recipientRef,
   senderRef,
   showWindowGuide,
   showFoldGuide,
   lang,
-}: AddressTextProps & {
-  mode: PrintMode;
-  pageIndex?: number;
-}) {
+}: AddressTextProps & { mode: PrintMode }) {
   const geometry = printGeometryCssVariables();
   const t = translations[lang];
 
   return (
     <section
-      className={`print-document print-document--${mode} print-page ${
-        pageIndex === 0 ? "print-page--first" : "print-page--continuation"
-      }`}
+      className={`print-document print-document--${mode}`}
       style={geometry}
-      aria-label={
-        mode === "address"
-          ? pageIndex === 0
-            ? "Printable address sheet"
-            : `Printable continuation sheet ${pageIndex + 1}`
-          : "Printable test page"
-      }
+      aria-label={mode === "address" ? "Printable address sheet" : "Printable test page"}
     >
       {mode === "address" ? (
-        pageIndex === 0 ? (
-          <>
-            <div className="print-address-field">
-              <AddressText
-                recipient={recipient}
-                sender={sender}
-                recipientRef={recipientRef}
-                senderRef={senderRef}
-                lang={lang}
-              />
-            </div>
-
-            {(placeDate || subject || letterPageText) && (
-              <div className="letter-body-flow">
-                {placeDate && <div className="letter-place-date">{placeDate}</div>}
-                {subject && <div className="letter-subject">{subject}</div>}
-                {letterPageText && <div className="letter-text">{letterPageText}</div>}
-              </div>
-            )}
-
-            {showWindowGuide && (
-              <div className="screen-guide-window no-print" aria-hidden="true">
-                <span className="screen-guide-label">{t.windowGuideLabel}</span>
-              </div>
-            )}
-
-            {showFoldGuide && (
-              <div className="screen-guide-folds no-print" aria-hidden="true">
-                <div className="screen-fold-line screen-fold-line--top">
-                  <span>{t.foldGuideTopLabel}</span>
-                </div>
-                <div className="screen-fold-line screen-fold-line--bottom">
-                  <span>{t.foldGuideBottomLabel}</span>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="continuation-body-flow">
-            {letterPageText && <div className="letter-text">{letterPageText}</div>}
+        <>
+          <div className="print-address-field">
+            <AddressText
+              recipient={recipient}
+              sender={sender}
+              recipientRef={recipientRef}
+              senderRef={senderRef}
+              lang={lang}
+            />
           </div>
-        )
+
+          {(placeDate || subject || letterText) && (
+            <div className="letter-body-flow">
+              {placeDate && <div className="letter-place-date">{placeDate}</div>}
+              {subject && <div className="letter-subject">{subject}</div>}
+              {letterText && <div className="letter-text">{letterText}</div>}
+            </div>
+          )}
+
+          {showWindowGuide && (
+            <div className="screen-guide-window no-print" aria-hidden="true">
+              <span className="screen-guide-label">{t.windowGuideLabel}</span>
+            </div>
+          )}
+
+          {showFoldGuide && (
+            <div className="screen-guide-folds no-print" aria-hidden="true">
+              <div className="screen-fold-line screen-fold-line--top">
+                <span>{t.foldGuideTopLabel}</span>
+              </div>
+              <div className="screen-fold-line screen-fold-line--bottom">
+                <span>{t.foldGuideBottomLabel}</span>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <>
           <div className="test-field-guide">
@@ -151,7 +132,7 @@ export default function App() {
   const measureRef = useRef<HTMLDivElement>(null);
   const [recipientOverflows, setRecipientOverflows] = useState(false);
   const [senderOverflows, setSenderOverflows] = useState(false);
-  const [letterPages, setLetterPages] = useState<string[]>([""]);
+  const [previewPageCount, setPreviewPageCount] = useState(1);
 
   const t = translations[lang];
   const isRecipientEmpty = recipient.trim() === "";
@@ -178,17 +159,30 @@ export default function App() {
     setRecipientOverflows(Boolean(recipientNode && hasVisualOverflow(recipientNode)));
     setSenderOverflows(Boolean(senderNode && hasVisualOverflow(senderNode)));
 
-    if (showLetter && letterText.trim()) {
-      const pages = paginateLetterContent(letterText, placeDate, subject);
-      setLetterPages(pages);
+    const measureNode = measureRef.current;
+    if (measureNode && showLetter) {
+      const pageHeightPx = (PRINT_GEOMETRY.paper.heightMm * 96) / 25.4;
+      const scrollH = measureNode.scrollHeight;
+      const pages = Math.max(1, Math.ceil((scrollH - 2) / pageHeightPx));
+      setPreviewPageCount(pages);
     } else {
-      setLetterPages([""]);
+      setPreviewPageCount(1);
     }
   }, [recipient, sender, placeDate, subject, letterText, showLetter, lang]);
 
   function openPrint(mode: PrintMode) {
-    if (mode === "address" && (isRecipientEmpty || hasTooManyRecipientLines)) {
-      return;
+    if (mode === "address") {
+      if (isRecipientEmpty || hasTooManyRecipientLines) {
+        return;
+      }
+      const recipientNode = recipientRef.current;
+      const senderNode = senderRef.current;
+      if (
+        (recipientNode && hasVisualOverflow(recipientNode)) ||
+        (senderNode && hasVisualOverflow(senderNode))
+      ) {
+        return;
+      }
     }
     setPrintMode(mode);
     requestAnimationFrame(() => window.print());
@@ -358,9 +352,9 @@ export default function App() {
           </div>
           <div className="preview-scale">
             <div className="preview-sheets">
-              {letterPages.map((pageText, pageIndex) => (
+              {Array.from({ length: previewPageCount }, (_, pageIndex) => (
                 <div key={pageIndex} className="preview-sheet-wrapper">
-                  {letterPages.length > 1 && (
+                  {previewPageCount > 1 && (
                     <div className="preview-sheet-header" aria-hidden="true">
                       <span>
                         {lang === "de" ? `Seite ${pageIndex + 1}` : `Page ${pageIndex + 1}`}
@@ -368,15 +362,19 @@ export default function App() {
                     </div>
                   )}
                   <div className="preview-sheet-viewport">
-                    <div className="preview-sheet-content">
+                    <div
+                      className="preview-sheet-content"
+                      style={{
+                        transform: `translateY(calc(-${pageIndex * 297}mm))`,
+                      }}
+                    >
                       <PrintableDocument
                         mode="address"
-                        pageIndex={pageIndex}
-                        letterPageText={pageText}
                         recipient={recipient}
                         sender={sender}
                         placeDate={showLetter ? placeDate : undefined}
                         subject={showLetter ? subject : undefined}
+                        letterText={showLetter ? letterText : undefined}
                         showWindowGuide={pageIndex === 0 && showWindowGuide}
                         showFoldGuide={pageIndex === 0 && showFoldGuide}
                         lang={lang}
@@ -395,12 +393,11 @@ export default function App() {
       <div className="print-measure no-print" aria-hidden="true" ref={measureRef}>
         <PrintableDocument
           mode="address"
-          pageIndex={0}
           recipient={recipient}
           sender={sender}
           placeDate={showLetter ? placeDate : undefined}
           subject={showLetter ? subject : undefined}
-          letterPageText={letterPages[0]}
+          letterText={showLetter ? letterText : undefined}
           recipientRef={recipientRef}
           senderRef={senderRef}
           lang={lang}
@@ -408,28 +405,15 @@ export default function App() {
       </div>
 
       <div className="print-only">
-        {printMode === "test" ? (
-          <PrintableDocument
-            mode="test"
-            recipient={recipient}
-            sender={sender}
-            lang={lang}
-          />
-        ) : (
-          letterPages.map((pageText, pageIndex) => (
-            <PrintableDocument
-              key={pageIndex}
-              mode="address"
-              pageIndex={pageIndex}
-              letterPageText={pageText}
-              recipient={recipient}
-              sender={sender}
-              placeDate={showLetter ? placeDate : undefined}
-              subject={showLetter ? subject : undefined}
-              lang={lang}
-            />
-          ))
-        )}
+        <PrintableDocument
+          mode={printMode}
+          recipient={recipient}
+          sender={sender}
+          placeDate={showLetter ? placeDate : undefined}
+          subject={showLetter ? subject : undefined}
+          letterText={showLetter ? letterText : undefined}
+          lang={lang}
+        />
       </div>
     </div>
   );

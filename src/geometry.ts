@@ -10,13 +10,6 @@ export const PRINT_GEOMETRY = Object.freeze({
   calibrationLineMm: 100,
 });
 
-/** Continuation page (Page 2+) safe area constants (WindowFit layout policy). */
-export const CONTINUATION_GEOMETRY = Object.freeze({
-  topSafeMm: 20,
-  bottomSafeMm: 20,
-  page1BottomSafeMm: 20,
-});
-
 /** Arithmetic derived directly from the authoritative fixtures above. */
 export const DERIVED_GEOMETRY = Object.freeze({
   additionalZoneTopMm: PRINT_GEOMETRY.addressField.topMm,
@@ -28,11 +21,6 @@ export const DERIVED_GEOMETRY = Object.freeze({
   letterContentTopMm: 103,
   letterContentLeftMm: 25,
   letterContentRightMm: 20,
-  continuationTopSafeMm: CONTINUATION_GEOMETRY.topSafeMm,
-  continuationBottomSafeMm: CONTINUATION_GEOMETRY.bottomSafeMm,
-  page1BottomSafeMm: CONTINUATION_GEOMETRY.page1BottomSafeMm,
-  continuationContentHeightMm: PRINT_GEOMETRY.paper.heightMm - CONTINUATION_GEOMETRY.topSafeMm - CONTINUATION_GEOMETRY.bottomSafeMm,
-  page1LetterContentHeightMm: PRINT_GEOMETRY.paper.heightMm - 103 - CONTINUATION_GEOMETRY.page1BottomSafeMm,
   foldTopMm: 105,
   foldBottomMm: 210,
 });
@@ -57,11 +45,6 @@ export function printGeometryCssVariables(): GeometryCssProperties {
     "--letter-content-top-mm": `${DERIVED_GEOMETRY.letterContentTopMm}mm`,
     "--letter-content-left-mm": `${DERIVED_GEOMETRY.letterContentLeftMm}mm`,
     "--letter-content-right-mm": `${DERIVED_GEOMETRY.letterContentRightMm}mm`,
-    "--continuation-top-safe-mm": `${DERIVED_GEOMETRY.continuationTopSafeMm}mm`,
-    "--continuation-bottom-safe-mm": `${DERIVED_GEOMETRY.continuationBottomSafeMm}mm`,
-    "--page1-bottom-safe-mm": `${DERIVED_GEOMETRY.page1BottomSafeMm}mm`,
-    "--continuation-content-height-mm": `${DERIVED_GEOMETRY.continuationContentHeightMm}mm`,
-    "--page1-letter-content-height-mm": `${DERIVED_GEOMETRY.page1LetterContentHeightMm}mm`,
     "--fold-top-mm": `${DERIVED_GEOMETRY.foldTopMm}mm`,
     "--fold-bottom-mm": `${DERIVED_GEOMETRY.foldBottomMm}mm`,
   } as GeometryCssProperties;

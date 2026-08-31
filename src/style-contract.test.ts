@@ -61,12 +61,4 @@ describe("WindowFit print CSS contracts", () => {
     expect(css).toContain(".preview-sheet-content");
     expect(css).toContain(".print-measure { position:absolute; visibility:hidden;");
   });
-
-  it("enforces continuation page safe area styling and print page breaks", () => {
-    expect(css).toContain(".continuation-body-flow");
-    expect(css).toContain("padding-top:var(--continuation-top-safe-mm");
-    expect(css).toContain("padding-bottom:var(--continuation-bottom-safe-mm");
-    expect(css).toContain(".print-page");
-    expect(css).toContain("page-break-after:always");
-  });
 });
