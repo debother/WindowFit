@@ -9,18 +9,19 @@ WindowFit V0.1 is a fully client-side A4 address-positioning utility for one Ger
 The sole source of physical dimensions is `src/geometry.ts`:
 
 - A4: 210 × 297 mm
-- address field: 85 × 45 mm
-- reference from upper paper edge: 62.7 mm
-- recipient zone: max. 6 lines / 27.3 mm
+- complete address field: x = 20 mm, y = 45 mm, 85 × 45 mm
+- additional / return-information zone: 85 × 17.7 mm
+- recipient zone: y = 62.7 mm, 85 × 27.3 mm, max. 6 lines
+- text start: x = 25 mm
 - calibration line: 100 mm
 
-The address field is horizontally centred because the V0.1 product contract contains no left-edge reference. Its centred position (62.5 mm) and the 8.85 mm clearance are transparent derivations from the supplied fixtures. Exact fold positions are intentionally not rendered because no verified fold geometry was supplied.
+The two zones make up the full 45 mm address field. Exact fold positions are intentionally not rendered because no verified fold geometry was supplied.
 
 ## Development
 
 `npm install` · `npm run test` · `npm run build` · `npm run lint`
 
-For responsive audit: run `npm run preview -- --host 127.0.0.1` in one terminal, then `npm run check:responsive` in another.
+For local inspection: `npm run preview -- --host 127.0.0.1`.
 
 ## Physical print gate
 
