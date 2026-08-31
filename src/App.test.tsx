@@ -80,7 +80,8 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
   it("uses measured visual overflow as a block without changing recipient content", () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Eine kurze Zeile" } });
-    const measured = document.querySelector(".preview-scale .recipient-text")!;
+    // Overflow must be measured from the UNSCALED print-measure layer, never from .preview-scale
+    const measured = document.querySelector(".print-measure .recipient-text")!;
     setOverflow(measured, { scrollWidth: 81, clientWidth: 80, scrollHeight: 10, clientHeight: 27 });
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Eine absichtlich zu lange Zeile" } });
     expect(screen.getByRole("status")).toHaveTextContent(/empfängerzeile ist zu lang/i);
@@ -98,7 +99,8 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
     });
     expect(document.querySelector(".sender-text")?.textContent).toBe("Ada Beispiel · Rücksendeangabe");
 
-    const measured = document.querySelector(".preview-scale .sender-text")!;
+    // Overflow must be measured from the UNSCALED print-measure layer, never from .preview-scale
+    const measured = document.querySelector(".print-measure .sender-text")!;
     setOverflow(measured, { scrollWidth: 81, clientWidth: 80, scrollHeight: 10, clientHeight: 17 });
     fireEvent.change(screen.getByLabelText(/absender oder zusatzzeile/i), {
       target: { value: "Eine absichtlich zu lange Zusatzzeile" },

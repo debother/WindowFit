@@ -363,8 +363,6 @@ export default function App() {
                         placeDate={showLetter ? placeDate : undefined}
                         subject={showLetter ? subject : undefined}
                         letterText={showLetter ? letterText : undefined}
-                        recipientRef={pageIndex === 0 ? recipientRef : undefined}
-                        senderRef={pageIndex === 0 ? senderRef : undefined}
                         showWindowGuide={pageIndex === 0 && showWindowGuide}
                         showFoldGuide={pageIndex === 0 && showFoldGuide}
                         lang={lang}
@@ -388,6 +386,8 @@ export default function App() {
           placeDate={showLetter ? placeDate : undefined}
           subject={showLetter ? subject : undefined}
           letterText={showLetter ? letterText : undefined}
+          recipientRef={recipientRef}
+          senderRef={senderRef}
           lang={lang}
         />
       </div>
