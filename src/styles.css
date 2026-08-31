@@ -39,13 +39,13 @@ textarea, input { width:100%; border:1.5px solid #9c968d; border-radius:2px; bac
 .trust-note { margin-top:1.4rem; color:#605b54; font-size:.84rem; line-height:1.45; }
 .line-limit { margin:.55rem 0 0; color:#8a2418; font-size:.84rem; line-height:1.4; }
 .preview-panel { min-width:0; }.preview-heading { display:flex; justify-content:space-between; gap:1rem; align-items:baseline; margin:0 0 .75rem; }.preview-heading h2 { margin:0; font-size:1rem; }.preview-heading span { color:#605b54; font-size:.75rem; }
-.preview-scale { overflow:hidden; border:1px solid #b7b0a6; background:#dedbd4; padding:clamp(12px,3vw,28px); }.preview-scale .print-document { transform:scale(var(--preview-scale, .42)); transform-origin:top left; margin-bottom:calc(297mm * -.58); box-shadow:0 6px 20px #0002; }
+.preview-scale { overflow:hidden; border:1px solid #b7b0a6; background:#dedbd4; padding:clamp(12px,3vw,28px); }.preview-scale .print-document { transform:scale(var(--preview-scale, .42)); transform-origin:top left; margin-bottom:calc(297mm * -.58); box-shadow:0 6px 20px #0002; height:var(--paper-height-mm); overflow:hidden; }
 .preview-note { margin:.7rem 0 0; color:#605b54; font-size:.8rem; line-height:1.4; }
-.print-document { position:relative; width:var(--paper-width-mm); height:var(--paper-height-mm); overflow:hidden; background:#fff; color:#000; }
+.print-document { position:relative; width:var(--paper-width-mm); min-height:var(--paper-height-mm); background:#fff; color:#000; }
 .print-address-field { position:absolute; left:var(--address-field-left-mm); top:var(--address-field-top-mm); width:var(--address-field-width-mm); height:var(--address-field-height-mm); border:0; }
 .address-content { width:100%; height:100%; position:relative; }.additional-zone { position:absolute; top:0; left:0; width:100%; height:var(--additional-zone-height-mm); overflow:hidden; }.recipient-zone { position:absolute; top:var(--additional-zone-height-mm); left:0; width:100%; height:var(--recipient-zone-height-mm); overflow:hidden; }
 .sender-text, .recipient-text { position:absolute; left:var(--text-inset-left-mm); width:var(--text-content-width-mm); overflow:hidden; white-space:pre; }.sender-text { top:0; height:100%; font:2.6mm/3.2mm Arial, Helvetica, sans-serif; }.recipient-text { top:0; height:100%; font-family:Arial, Helvetica, sans-serif; font-size:4mm; line-height:var(--recipient-line-height-mm); }
-.letter-body-flow { position:absolute; top:var(--letter-content-top-mm); left:var(--letter-content-left-mm); right:var(--letter-content-right-mm); bottom:20mm; overflow:hidden; font:11pt/1.5 Arial, Helvetica, sans-serif; color:#000; }
+.letter-body-flow { padding-top:var(--letter-content-top-mm); padding-left:var(--letter-content-left-mm); padding-right:var(--letter-content-right-mm); padding-bottom:25mm; font:11pt/1.5 Arial, Helvetica, sans-serif; color:#000; box-sizing:border-box; }
 .letter-place-date { text-align:right; font-size:11pt; margin-bottom:14pt; }
 .letter-subject { font-weight:700; font-size:12pt; margin-bottom:14pt; }
 .letter-text { white-space:pre-wrap; word-break:break-word; }
@@ -62,4 +62,11 @@ textarea, input { width:100%; border:1.5px solid #9c968d; border-radius:2px; bac
 .print-only { display:none; }
 @media (max-width:720px) { .app-shell { padding-top:18px; }.app-header { padding-bottom:1.8rem; }.format-label { display:none; }.workbench { grid-template-columns:1fr; gap:2.5rem; }.controls { max-width:none; }.preview-scale { --preview-scale:.34; }.preview-scale .print-document { margin-bottom:calc(297mm * -.66); } }
 @media (max-width:360px) { .preview-scale { --preview-scale:.29; padding:9px; }.preview-scale .print-document { margin-bottom:calc(297mm * -.71); }.actions button { width:100%; } }
-@media print { @page { size:A4 portrait; margin:0; } html, body, #root, .app-shell { width:210mm; height:297mm; margin:0; padding:0; background:#fff; } .no-print { display:none !important; } .print-only { display:block; } .print-document { display:block; page-break-after:avoid; } }
+@media print {
+  @page { size:A4 portrait; margin:0; }
+  html, body, #root, .app-shell { width:210mm; min-height:297mm; margin:0; padding:0; background:#fff; }
+  .no-print { display:none !important; }
+  .print-only { display:block; }
+  .print-document { width:210mm; min-height:297mm; display:block; page-break-after:auto; }
+  .print-document--test { width:210mm; height:297mm; overflow:hidden; page-break-after:avoid; }
+}

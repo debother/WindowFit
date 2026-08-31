@@ -120,14 +120,14 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Empfänger Name\nStraße 1\n12345 Ort" } });
     fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
 
-    fireEvent.change(screen.getByLabelText(/ort und datum/i), { target: { value: "Dieburg, 31.08.2026" } });
+    fireEvent.change(screen.getByLabelText(/ort und datum/i), { target: { value: "Frankfurt am Main, 31.08.2026" } });
     fireEvent.change(screen.getByLabelText(/betreff/i), { target: { value: "Wichtige Mitteilung" } });
     fireEvent.change(screen.getByLabelText(/brieftext/i), {
       target: { value: "Sehr geehrte Damen und Herren,\n\ndies ist der Inhalt." },
     });
 
     const printDoc = document.querySelector(".print-only .print-document--address")!;
-    expect(printDoc.querySelector(".letter-place-date")?.textContent).toBe("Dieburg, 31.08.2026");
+    expect(printDoc.querySelector(".letter-place-date")?.textContent).toBe("Frankfurt am Main, 31.08.2026");
     expect(printDoc.querySelector(".letter-subject")?.textContent).toBe("Wichtige Mitteilung");
     expect(printDoc.querySelector(".letter-text")?.textContent).toContain("dies ist der Inhalt.");
   });
@@ -219,7 +219,7 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     expect(printDoc).toHaveClass("print-document");
   });
 
-  it("17. Multi-page layout handles long letter content flow", () => {
+  it("17. Content allocation: preserves entire multi-paragraph letter text in print DOM without truncation (Note: physical print pagination is verified via CDP PDF tests)", () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Firma A\nStr. 1\n12345 Stadt" } });
     fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
@@ -228,7 +228,10 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     fireEvent.change(screen.getByLabelText(/brieftext/i), { target: { value: longText } });
 
     const printDoc = document.querySelector(".print-only .print-document--address")!;
-    expect(printDoc.querySelector(".letter-text")?.textContent).toContain("Absatz 50");
+    const content = printDoc.querySelector(".letter-text")?.textContent;
+    expect(content).toContain("Absatz 1:");
+    expect(content).toContain("Absatz 25:");
+    expect(content).toContain("Absatz 50:");
   });
 
   it("18. No UI controls in print output", () => {

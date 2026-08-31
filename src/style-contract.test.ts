@@ -42,4 +42,15 @@ describe("WindowFit print CSS contracts", () => {
     expect(recipientGuideRule).toContain("top:var(--recipient-zone-top-mm)");
     expect(recipientGuideRule).toContain("height:var(--recipient-zone-height-mm)");
   });
+
+  it("preserves print unconstrained flow for multi-page letter pagination", () => {
+    const letterFlowRule = css.match(/\.letter-body-flow \{([^}]*)\}/)?.[1] ?? "";
+    expect(letterFlowRule).toContain("padding-top:var(--letter-content-top-mm)");
+    expect(letterFlowRule).not.toContain("position:absolute");
+    expect(letterFlowRule).not.toContain("overflow:hidden");
+    expect(letterFlowRule).not.toContain("bottom:20mm");
+
+    expect(css).toContain(".print-document { width:210mm; min-height:297mm; display:block; page-break-after:auto; }");
+    expect(css).toContain(".print-document--test { width:210mm; height:297mm; overflow:hidden; page-break-after:avoid; }");
+  });
 });
