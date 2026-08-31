@@ -18,6 +18,11 @@ export const DERIVED_GEOMETRY = Object.freeze({
   textInsetLeftMm: PRINT_GEOMETRY.text.leftMm - PRINT_GEOMETRY.addressField.leftMm,
   textContentWidthMm: PRINT_GEOMETRY.addressField.widthMm - (PRINT_GEOMETRY.text.leftMm - PRINT_GEOMETRY.addressField.leftMm),
   recipientLineHeightMm: PRINT_GEOMETRY.recipientZone.heightMm / PRINT_GEOMETRY.recipientZone.maxLines,
+  letterContentTopMm: 103,
+  letterContentLeftMm: 25,
+  letterContentRightMm: 20,
+  foldTopMm: 105,
+  foldBottomMm: 210,
 });
 
 export type GeometryCssProperties = CSSProperties & Record<`--${string}`, string>;
@@ -37,5 +42,10 @@ export function printGeometryCssVariables(): GeometryCssProperties {
     "--text-content-width-mm": `${DERIVED_GEOMETRY.textContentWidthMm}mm`,
     "--recipient-line-height-mm": `${DERIVED_GEOMETRY.recipientLineHeightMm}mm`,
     "--calibration-length-mm": `${PRINT_GEOMETRY.calibrationLineMm}mm`,
+    "--letter-content-top-mm": `${DERIVED_GEOMETRY.letterContentTopMm}mm`,
+    "--letter-content-left-mm": `${DERIVED_GEOMETRY.letterContentLeftMm}mm`,
+    "--letter-content-right-mm": `${DERIVED_GEOMETRY.letterContentRightMm}mm`,
+    "--fold-top-mm": `${DERIVED_GEOMETRY.foldTopMm}mm`,
+    "--fold-bottom-mm": `${DERIVED_GEOMETRY.foldBottomMm}mm`,
   } as GeometryCssProperties;
 }
