@@ -15,9 +15,7 @@ function AddressText({ recipient, sender, recipientRef, senderRef }: AddressText
 function PrintableDocument({ mode, recipient, sender, recipientRef, senderRef }: AddressTextProps & { mode: PrintMode }) {
   const geometry = printGeometryCssVariables();
   return <section className={`print-document print-document--${mode}`} style={geometry} aria-label={mode === "address" ? "Printable address sheet" : "Printable test page"}>
-    <div className="print-address-field">
-      {mode === "address" ? <AddressText recipient={recipient} sender={sender} recipientRef={recipientRef} senderRef={senderRef} /> : <div className="test-field-guide"><span className="field-guide-label">Address field<br />85 × 45 mm</span><div className="test-recipient-guide"><span>Recipient zone<br />85 × 27.3 mm</span></div></div>}
-    </div>
+    {mode === "address" ? <div className="print-address-field"><AddressText recipient={recipient} sender={sender} recipientRef={recipientRef} senderRef={senderRef} /></div> : <><div className="test-field-guide"><span className="field-guide-label">Address field<br />85 × 45 mm</span></div><div className="test-recipient-guide"><span>Recipient zone<br />85 × 27.3 mm</span></div></>}
     {mode === "test" && <div className="test-content"><p className="test-title">WindowFit test page</p><p>Print at 100% / Actual size. Disable browser headers and footers if they affect your print.</p><p>Fold only after checking the address field against your envelope. No exact fold line is shown because it is not defined by this layout fixture.</p><div className="calibration" aria-label="100 millimetre calibration reference"><span className="calibration-line" /><span>100 mm</span></div><p className="calibration-copy">This line should measure exactly 100 mm after printing.</p><p>Use this page to verify your browser, printer and envelope before printing an address.</p></div>}
   </section>;
 }

@@ -29,4 +29,17 @@ describe("WindowFit print CSS contracts", () => {
     expect(css).not.toContain("62.5mm");
     expect(css).not.toContain("8.85mm");
   });
+
+  it("positions both test guides independently from authoritative page variables", () => {
+    const sharedGuideRule = css.match(/\.test-field-guide, \.test-recipient-guide \{([^}]*)\}/)?.[1] ?? "";
+    const fieldGuideRule = css.match(/(?:^|})\.test-field-guide \{([^}]*)\}/)?.[1] ?? "";
+    const recipientGuideRule = css.match(/(?:^|})\.test-recipient-guide \{([^}]*)\}/)?.[1] ?? "";
+    expect(sharedGuideRule).toContain("position:absolute");
+    expect(sharedGuideRule).toContain("left:var(--address-field-left-mm)");
+    expect(sharedGuideRule).toContain("width:var(--address-field-width-mm)");
+    expect(fieldGuideRule).toContain("top:var(--address-field-top-mm)");
+    expect(fieldGuideRule).toContain("height:var(--address-field-height-mm)");
+    expect(recipientGuideRule).toContain("top:var(--recipient-zone-top-mm)");
+    expect(recipientGuideRule).toContain("height:var(--recipient-zone-height-mm)");
+  });
 });

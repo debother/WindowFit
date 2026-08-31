@@ -102,10 +102,18 @@ describe("WindowFit V0.1 remediation", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Test page" }));
     expect(print).toHaveBeenCalledTimes(1);
-    expect(document.querySelector(".print-only .print-document--test .test-field-guide")).toBeInTheDocument();
-    expect(document.querySelector(".print-only .print-document--test")).toHaveTextContent("Address field");
-    expect(document.querySelector(".print-only .print-document--test")).toHaveTextContent("Recipient zone");
-    expect(document.querySelector(".print-only .print-document--test .calibration-line")).toBeInTheDocument();
+    const testDocument = document.querySelector(".print-only .print-document--test")!;
+    const fieldGuide = testDocument.querySelector(":scope > .test-field-guide")!;
+    const recipientGuide = testDocument.querySelector(":scope > .test-recipient-guide")!;
+    expect(fieldGuide).toBeInTheDocument();
+    expect(recipientGuide).toBeInTheDocument();
+    expect(fieldGuide.parentElement).toBe(testDocument);
+    expect(recipientGuide.parentElement).toBe(testDocument);
+    expect(fieldGuide.querySelector(".test-recipient-guide")).not.toBeInTheDocument();
+    expect(testDocument).toHaveStyle({ "--address-field-left-mm": "20mm", "--address-field-top-mm": "45mm", "--address-field-width-mm": "85mm", "--address-field-height-mm": "45mm", "--recipient-zone-top-mm": "62.7mm", "--recipient-zone-height-mm": "27.3mm" });
+    expect(testDocument).toHaveTextContent("Address field");
+    expect(testDocument).toHaveTextContent("Recipient zone");
+    expect(testDocument.querySelector(".calibration-line")).toBeInTheDocument();
     vi.unstubAllGlobals(); print.mockRestore();
   });
 
