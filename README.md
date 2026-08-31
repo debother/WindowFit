@@ -2,7 +2,7 @@
 
 Put the address where the window is.
 
-WindowFit V0.1 is a fully client-side A4 address-positioning utility for one German window-letter layout. It uses the browser print dialog, not a PDF service.
+WindowFit V0.2 is a fully client-side A4 address-positioning utility for one German window-letter layout. It uses the browser print dialog, not a PDF service.
 
 ## Physical geometry
 
