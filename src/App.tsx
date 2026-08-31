@@ -135,16 +135,15 @@ export default function App() {
   const [previewPageCount, setPreviewPageCount] = useState(1);
 
   const t = translations[lang];
-
+  const isRecipientEmpty = recipient.trim() === "";
   const hasTooManyRecipientLines = recipientHasTooManyExplicitLines(
     recipient,
     PRINT_GEOMETRY.recipientZone.maxLines
   );
-  const cannotPrint =
-    recipient === "" || hasTooManyRecipientLines || recipientOverflows || senderOverflows;
+  const isPrintDisabled = isRecipientEmpty || hasTooManyRecipientLines;
 
   const printLimitMessage =
-    recipient === ""
+    isRecipientEmpty
       ? t.validationEnterRecipient
       : hasTooManyRecipientLines
       ? t.validationMaxLines
@@ -172,6 +171,19 @@ export default function App() {
   }, [recipient, sender, placeDate, subject, letterText, showLetter, lang]);
 
   function openPrint(mode: PrintMode) {
+    if (mode === "address") {
+      if (isRecipientEmpty || hasTooManyRecipientLines) {
+        return;
+      }
+      const recipientNode = recipientRef.current;
+      const senderNode = senderRef.current;
+      if (
+        (recipientNode && hasVisualOverflow(recipientNode)) ||
+        (senderNode && hasVisualOverflow(senderNode))
+      ) {
+        return;
+      }
+    }
     setPrintMode(mode);
     requestAnimationFrame(() => window.print());
   }
@@ -221,7 +233,7 @@ export default function App() {
             onChange={(event) => setRecipient(event.target.value)}
             rows={6}
             placeholder={t.recipientPlaceholder}
-            aria-describedby={cannotPrint ? "print-limit" : undefined}
+            aria-describedby={printLimitMessage ? "print-limit" : undefined}
           />
           {printLimitMessage && (
             <p id="print-limit" className="line-limit" role="status">
@@ -306,7 +318,7 @@ export default function App() {
               className="primary-action"
               type="button"
               onClick={() => openPrint("address")}
-              disabled={cannotPrint}
+              disabled={isPrintDisabled}
             >
               {t.printAction}
             </button>

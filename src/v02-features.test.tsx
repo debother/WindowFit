@@ -346,26 +346,40 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     expect(document.querySelector(".print-only")?.textContent).toContain("Test Betreff");
   });
   it("25. Comprehensive print button validation lifecycle across recipient and letter state changes", () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+
     render(<App />);
     const recipientInput = screen.getByLabelText("Empfängeradresse");
     const printBtn = screen.getByRole("button", { name: "Drucken / PDF" });
 
     // 1. Initial: empty recipient -> Print disabled
     expect(printBtn).toBeDisabled();
+    expect(printBtn.hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("status")).toHaveTextContent(/empfängeradresse/i);
+    fireEvent.click(printBtn);
+    expect(print).not.toHaveBeenCalled();
 
     // 2. Enter normal valid recipient (Ada Beispiel, 3 lines) -> Print enabled
     fireEvent.change(recipientInput, {
       target: { value: "Ada Beispiel\nBeispielstraße 1\n12345 Beispielstadt" },
     });
     expect(printBtn).toBeEnabled();
+    expect(printBtn.hasAttribute("disabled")).toBe(false);
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(1);
 
     // 3. Add normal sender -> Print remains enabled
     fireEvent.change(screen.getByLabelText(/absender oder zusatzzeile/i), {
       target: { value: "Florian Hoffarth · Ringstr. 48 · 64807 Dieburg" },
     });
     expect(printBtn).toBeEnabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(2);
 
     // 4. Add short letter content -> Print remains enabled
     fireEvent.click(screen.getByRole("button", { name: "+ Brieftext hinzufügen" }));
@@ -374,38 +388,59 @@ describe("WindowFit V0.2 Sprint Goals Comprehensive Suite", () => {
     const letterInput = screen.getByLabelText(/brieftext/i);
     fireEvent.change(letterInput, { target: { value: "Sehr geehrte Damen und Herren,\n\nkurzer Brief." } });
     expect(printBtn).toBeEnabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(3);
 
     // 5. Add multi-page letter content -> Print remains enabled
     const multiPageText = Array.from({ length: 25 }, (_, i) => `Absatz ${i + 1}: Fließtext für Mehrseitenbrief.`).join("\n\n");
     fireEvent.change(letterInput, { target: { value: multiPageText } });
     expect(printBtn).toBeEnabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(4);
 
     // 6. Delete letter body again -> Print remains enabled while recipient valid
     fireEvent.change(letterInput, { target: { value: "" } });
     expect(printBtn).toBeEnabled();
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(5);
 
     // 7. Clear recipient -> Print becomes disabled
     fireEvent.change(recipientInput, { target: { value: "" } });
     expect(printBtn).toBeDisabled();
+    expect(printBtn.hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("status")).toHaveTextContent(/empfängeradresse/i);
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(5);
 
     // 8. Restore valid recipient -> Print becomes enabled again
     fireEvent.change(recipientInput, {
       target: { value: "Ada Beispiel\nBeispielstraße 1\n12345 Beispielstadt" },
     });
     expect(printBtn).toBeEnabled();
+    expect(printBtn.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(6);
 
     // 9. 7-line recipient -> Print disabled (line limit exceeded)
     fireEvent.change(recipientInput, {
       target: { value: "L1\nL2\nL3\nL4\nL5\nL6\nL7" },
     });
     expect(printBtn).toBeDisabled();
+    expect(printBtn.hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("status")).toHaveTextContent(/6 empfängerzeilen/i);
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(6);
 
     // 10. Restore 6-line recipient -> Print enabled
     fireEvent.change(recipientInput, {
       target: { value: "L1\nL2\nL3\nL4\nL5\nL6" },
     });
     expect(printBtn).toBeEnabled();
+    expect(printBtn.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(printBtn);
+    expect(print).toHaveBeenCalledTimes(7);
+
+    vi.unstubAllGlobals();
+    print.mockRestore();
   });
 });

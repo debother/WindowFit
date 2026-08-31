@@ -77,19 +77,26 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
     expect(document.querySelector(".recipient-text")?.textContent).toBe("1\n2\n3\n4\n5\n6\n7");
   });
 
-  it("uses measured visual overflow as a block without changing recipient content", () => {
+  it("shows explicit warning on measured recipient overflow and blocks print invocation without silently disabling the button", () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Eine kurze Zeile" } });
-    // Overflow must be measured from the UNSCALED print-measure layer, never from .preview-scale
     const measured = document.querySelector(".print-measure .recipient-text")!;
     setOverflow(measured, { scrollWidth: 81, clientWidth: 80, scrollHeight: 10, clientHeight: 27 });
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Eine absichtlich zu lange Zeile" } });
     expect(screen.getByRole("status")).toHaveTextContent(/empfängerzeile ist zu lang/i);
-    expect(screen.getByRole("button", { name: "Drucken / PDF" })).toBeDisabled();
+    // Button is not disabled by DOM measurement
+    const btn = screen.getByRole("button", { name: "Drucken / PDF" });
+    expect(btn).toBeEnabled();
+    // But invocation is blocked
+    fireEvent.click(btn);
+    expect(print).not.toHaveBeenCalled();
     expect(measured.textContent).toBe("Eine absichtlich zu lange Zeile");
+    print.mockRestore();
   });
 
-  it("keeps sender separate, optional and blocks its measured overflow", () => {
+  it("keeps sender separate, optional and shows explicit warning on measured overflow while blocking print invocation", () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
     render(<App />);
     fireEvent.change(screen.getByLabelText("Empfängeradresse"), { target: { value: "Ada Beispiel" } });
     expect(document.querySelectorAll(".sender-text")).toHaveLength(0);
@@ -99,15 +106,20 @@ describe("WindowFit V0.1 protected baseline & V0.2 extensions", () => {
     });
     expect(document.querySelector(".sender-text")?.textContent).toBe("Ada Beispiel · Rücksendeangabe");
 
-    // Overflow must be measured from the UNSCALED print-measure layer, never from .preview-scale
     const measured = document.querySelector(".print-measure .sender-text")!;
     setOverflow(measured, { scrollWidth: 81, clientWidth: 80, scrollHeight: 10, clientHeight: 17 });
     fireEvent.change(screen.getByLabelText(/absender oder zusatzzeile/i), {
       target: { value: "Eine absichtlich zu lange Zusatzzeile" },
     });
     expect(screen.getByRole("status")).toHaveTextContent(/zusatzzeile ist zu lang/i);
-    expect(screen.getByRole("button", { name: "Drucken / PDF" })).toBeDisabled();
+    // Button is not disabled by DOM measurement
+    const btn = screen.getByRole("button", { name: "Drucken / PDF" });
+    expect(btn).toBeEnabled();
+    // But invocation is blocked
+    fireEvent.click(btn);
+    expect(print).not.toHaveBeenCalled();
     expect(measured.textContent).toBe("Eine absichtlich zu lange Zusatzzeile");
+    print.mockRestore();
   });
 
   it("keeps sender and recipient in separate printed zones", () => {
