@@ -25,3 +25,12 @@ For responsive audit: run `npm run preview -- --host 127.0.0.1` in one terminal,
 ## Physical print gate
 
 Automated testing does not verify printer, browser print scaling, paper feed, folding or a real envelope. Print the test page at **100% / Actual size**, disable headers/footers where necessary, measure the 100 mm line, then test the folded sheet in the intended envelope.
+
+## Manual QA checklist
+
+- [ ] Chromium, Firefox and Safari/WebKit: enter, edit and clear recipient and optional sender text.
+- [ ] At 375 px, 320 px and with enlarged browser text: no horizontal page overflow; controls and both actions remain usable.
+- [ ] A4 print: choose **100% / Actual size** and disable browser headers/footers where necessary.
+- [ ] Print the test page and measure the reference line. It must measure 100 mm.
+- [ ] Print a normal address sheet, fold it and insert it into the intended supported window envelope.
+- [ ] Check that the address remains visible after realistic small paper movement in the envelope.
