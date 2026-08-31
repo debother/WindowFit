@@ -161,7 +161,7 @@ export default function App() {
     setSenderOverflows(Boolean(senderNode && hasVisualOverflow(senderNode)));
 
     const measureNode = measureRef.current;
-    if (measureNode) {
+    if (measureNode && showLetter) {
       const pageHeightPx = (PRINT_GEOMETRY.paper.heightMm * 96) / 25.4;
       const scrollH = measureNode.scrollHeight;
       const pages = Math.max(1, Math.ceil((scrollH - 2) / pageHeightPx));
@@ -176,8 +176,10 @@ export default function App() {
     requestAnimationFrame(() => window.print());
   }
 
+  const geometryVars = printGeometryCssVariables();
+
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={geometryVars}>
       <header className="app-header no-print">
         <div className="brand-group">
           <span className="brand">{t.brand}</span>
