@@ -389,6 +389,21 @@ export default function App() {
         </section>
       </main>
 
+      <footer className="app-footer no-print">
+        <div className="footer-left">
+          <span>
+            Made by <a href="https://debother.com/">debother.</a>
+          </span>
+        </div>
+        <nav className="footer-nav" aria-label="Footer navigation">
+          <a href="https://debother.com/impressum/">Impressum</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://debother.com/privacy/">Privacy</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/debother/WindowFit">GitHub</a>
+        </nav>
+      </footer>
+
       {/* Hidden offscreen unconstrained container for accurate layout measurement */}
       <div className="print-measure no-print" aria-hidden="true" ref={measureRef}>
         <PrintableDocument
