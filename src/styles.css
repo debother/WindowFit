@@ -36,6 +36,7 @@ textarea, input { width:100%; border:1.5px solid #9c968d; border-radius:2px; bac
 .fold-guide-steps { margin:0; padding-left:1.2rem; color:#4f4b45; line-height:1.45; }
 .fold-guide-steps li { margin-bottom:.35rem; }
 .fold-guide-steps li:last-child { margin-bottom:0; }
+.trust-microcopy { margin:.45rem 0 0; color:#605b54; font-size:.82rem; line-height:1.4; }
 .trust-note { margin-top:1.4rem; color:#605b54; font-size:.84rem; line-height:1.45; }
 .line-limit { margin:.55rem 0 0; color:#8a2418; font-size:.84rem; line-height:1.4; }
 .preview-panel { min-width:0; }.preview-heading { display:flex; justify-content:space-between; gap:1rem; align-items:baseline; margin:0 0 .75rem; }.preview-heading h2 { margin:0; font-size:1rem; }.preview-heading span { color:#605b54; font-size:.75rem; }

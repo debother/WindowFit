@@ -250,6 +250,7 @@ export default function App() {
             onChange={(event) => setSender(event.target.value)}
             placeholder={t.senderPlaceholder}
           />
+          <p className="trust-microcopy">{t.trustMicrocopy}</p>
 
           <div className="guide-toggles">
             <label className="toggle-checkbox">
@@ -342,7 +343,7 @@ export default function App() {
             </div>
           )}
 
-          <p className="trust-note">{t.trustNote}</p>
+          <p className="trust-note">{t.testHint}</p>
         </section>
 
         <section className="preview-panel no-print" aria-labelledby="preview-heading">
