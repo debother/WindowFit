@@ -397,9 +397,9 @@ export default function App() {
           </span>
         </div>
         <nav className="footer-nav" aria-label="Footer navigation">
-          <a href="https://debother.com/impressum/">Impressum</a>
+          <a href={t.footerImprintHref}>{t.footerImprintText}</a>
           <span aria-hidden="true">·</span>
-          <a href="https://debother.com/privacy/">Privacy</a>
+          <a href={t.footerPrivacyHref}>{t.footerPrivacyText}</a>
           <span aria-hidden="true">·</span>
           <a href="https://github.com/debother/WindowFit">GitHub</a>
         </nav>

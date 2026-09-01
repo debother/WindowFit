@@ -50,6 +50,10 @@ export const translations = {
     testP3: "Nutze diese Seite zur Prüfung von Browser, Drucker und Umschlag vor dem eigentlichen Briefdruck.",
     testFieldGuideLabel: "Adressfeld\n85 × 45 mm",
     testRecipientGuideLabel: "Empfängerzone\n85 × 27,3 mm",
+    footerImprintText: "Impressum",
+    footerImprintHref: "https://debother.com/impressum/",
+    footerPrivacyText: "Datenschutz",
+    footerPrivacyHref: "https://debother.com/datenschutz/",
   },
   en: {
     brand: "WindowFit",
@@ -100,6 +104,10 @@ export const translations = {
     testP3: "Use this page to verify your browser, printer and envelope before printing an address.",
     testFieldGuideLabel: "Address field\n85 × 45 mm",
     testRecipientGuideLabel: "Recipient zone\n85 × 27.3 mm",
+    footerImprintText: "Imprint",
+    footerImprintHref: "https://debother.com/imprint/",
+    footerPrivacyText: "Privacy",
+    footerPrivacyHref: "https://debother.com/privacy/",
   },
 } as const;
 
